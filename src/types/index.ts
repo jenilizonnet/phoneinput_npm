@@ -3,20 +3,49 @@ import type { CountryCode as LpnCountryCode } from 'libphonenumber-js';
 
 export type CountryCode = LpnCountryCode | string;
 
+export interface CountryLengths {
+  /** Minimum valid national phone number length in digits */
+  minLength: number;
+  /** Maximum valid national phone number length in digits */
+  maxLength: number;
+  /** Typical national mobile number length in digits */
+  mobileLength: number;
+  /** All possible valid national number lengths */
+  possibleLengths: number[];
+}
+
 export interface Country {
   /** ISO 3166-1 alpha-2 two-letter code (e.g., 'US', 'IN', 'GB') */
   code: string;
+  /** ISO 3166-1 alpha-2 two-letter code alias (e.g., 'US', 'IN', 'GB') */
+  isoCode: string;
   /** Full english country name (e.g., 'United States', 'India') */
   name: string;
   /** International calling code with '+' prefix (e.g., '+1', '+91') */
   callingCode: string;
+  /** Calling code digits without '+' prefix (e.g., '1', '91') */
+  countryCode: string;
   /** Unicode emoji flag */
   flag: string;
   /** Example national phone number format */
   example?: string;
+  /** Minimum national phone number length in digits */
+  minLength: number;
+  /** Maximum national phone number length in digits */
+  maxLength: number;
+  /** Typical national mobile phone number length in digits */
+  mobileLength?: number;
+  /** All possible valid national number lengths */
+  possibleLengths?: number[];
 }
 
-export type PhoneValidationStatus = 'VALID' | 'INVALID' | 'INCOMPLETE' | 'EMPTY';
+export type PhoneValidationStatus =
+  | 'VALID'
+  | 'INVALID'
+  | 'INCOMPLETE'
+  | 'TOO_SHORT'
+  | 'TOO_LONG'
+  | 'EMPTY';
 
 export interface PhoneValidationResult {
   /** Whether the current phone number is valid according to E.164 / country rules */
@@ -31,10 +60,26 @@ export interface PhoneValidationResult {
   nationalNumber?: string;
   /** International formatted phone number (e.g., '+1 202-555-0123') */
   internationalNumber?: string;
-  /** Selected country ISO code */
+  /** Selected country ISO code (e.g., 'US', 'IN') */
   countryCode: string;
-  /** Selected country calling code */
+  /** Selected country ISO code alias (e.g., 'US', 'IN') */
+  isoCode: string;
+  /** Selected country calling code with '+' prefix (e.g., '+1', '+91') */
   callingCode: string;
+  /** Selected country calling code digits without '+' prefix (e.g., '1', '91') */
+  countryCallingCode: string;
+  /** Minimum valid length for selected country */
+  minLength: number;
+  /** Maximum valid length for selected country */
+  maxLength: number;
+  /** Typical mobile length for selected country */
+  mobileLength?: number;
+  /** Number of national digits entered so far */
+  currentLength: number;
+  /** Whether current digits count meets or exceeds minimum length */
+  isMinLengthReached: boolean;
+  /** Whether current digits count exceeds maximum allowed length */
+  isMaxLengthExceeded: boolean;
   /** Human-readable error message if invalid */
   error?: string;
 }
@@ -50,8 +95,20 @@ export interface PhoneInputRef {
   closeCountryPicker: () => void;
   /** Check if current value is valid */
   isValid: () => boolean;
-  /** Get current selected country */
+  /** Get current selected country object */
   getCountry: () => Country;
+  /** Get current country ISO code (e.g., 'IN', 'US') */
+  getCountryCode: () => string;
+  /** Get current country ISO code alias (e.g., 'IN', 'US') */
+  getIsoCode: () => string;
+  /** Get current country calling code with '+' (e.g., '+91', '+1') */
+  getCallingCode: () => string;
+  /** Get minimum allowed national number length for selected country */
+  getMinLength: () => number;
+  /** Get maximum allowed national number length for selected country */
+  getMaxLength: () => number;
+  /** Get latest full validation result */
+  getValidationResult: () => PhoneValidationResult;
   /** Get current phone number value */
   getPhoneNumber: () => string;
   /** Get full E.164 phone number */
@@ -150,6 +207,14 @@ export interface PhoneInputProps extends Omit<TextInputProps, 'value' | 'default
   showCallingCode?: boolean;
   showDropdownIcon?: boolean;
 
+  // Length & Input Limits
+  enforceMaxLength?: boolean;
+  maxLength?: number;
+  minLength?: number;
+  showLengthIndicator?: boolean;
+  lengthIndicatorStyle?: StyleProp<TextStyle>;
+  lengthIndicatorContainerStyle?: StyleProp<ViewStyle>;
+
   // Filter Country List
   countries?: string[];
   excludeCountries?: string[];
@@ -167,7 +232,8 @@ export interface PhoneInputProps extends Omit<TextInputProps, 'value' | 'default
     fullNumber: string,
     nationalNumber: string,
     country: Country,
-    isValid: boolean
+    isValid: boolean,
+    validationResult?: PhoneValidationResult
   ) => void;
   onChangeCountry?: (country: Country) => void;
   onValidityChange?: (isValid: boolean, validationResult: PhoneValidationResult) => void;
@@ -197,4 +263,3 @@ export interface PhoneInputProps extends Omit<TextInputProps, 'value' | 'default
   selectedIndicatorColor?: string;
   modalAnimationType?: 'none' | 'slide' | 'fade';
 }
-

@@ -58,5 +58,19 @@ describe('PhoneInput Component', () => {
     expect(element.props.countries).toEqual(['US', 'CA', 'GB']);
     expect(element.props.excludeCountries).toEqual(['FR']);
   });
-});
 
+  it('should support enforceMaxLength, minLength, maxLength, and showLengthIndicator props', () => {
+    const element = React.createElement(PhoneInput, {
+      defaultCountryCode: 'IN',
+      enforceMaxLength: true,
+      maxLength: 10,
+      minLength: 8,
+      showLengthIndicator: true,
+    });
+
+    expect(element.props.enforceMaxLength).toBe(true);
+    expect(element.props.maxLength).toBe(10);
+    expect(element.props.minLength).toBe(8);
+    expect(element.props.showLengthIndicator).toBe(true);
+  });
+});

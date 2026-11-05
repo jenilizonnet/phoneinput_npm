@@ -8,12 +8,22 @@ export { SearchInput } from './components/SearchInput';
 // Hooks
 export { usePhoneInput } from './hooks/usePhoneInput';
 
-// Data & Constants
+// Data & Country Functions
 export {
   COUNTRIES,
   COUNTRY_BY_CODE,
+  COUNTRY_BY_CALLING_CODE,
+  getAllCountries,
   getCountryByCode,
+  getCountryByIsoCode,
+  getCountryByCallingCode,
+  getCountryIsoCode,
+  getCountryLengths,
+  getCountryMinLength,
+  getCountryMaxLength,
 } from './data/countries';
+
+// Constants
 export {
   DEFAULT_COUNTRY_CODE,
   DEFAULT_PLACEHOLDER,
@@ -26,7 +36,10 @@ export {
 // Utilities
 export {
   validatePhoneNumber,
+  validatePhoneNumberLength,
+  isPhoneNumberValid,
   getCallingCode,
+  getCountryCallingCodeNumber,
 } from './utils/phoneValidation';
 export {
   formatAsYouType,
@@ -39,6 +52,7 @@ export {
 export type {
   Country,
   CountryCode,
+  CountryLengths,
   PhoneValidationResult,
   PhoneValidationStatus,
   PhoneInputRef,
@@ -49,4 +63,3 @@ export type {
 } from './types';
 
 export default PhoneInput;
-

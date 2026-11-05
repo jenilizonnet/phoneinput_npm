@@ -27,6 +27,12 @@ export const PhoneInput = forwardRef<PhoneInputRef, PhoneInputProps>(
       showFlag = true,
       showCallingCode = true,
       showDropdownIcon = true,
+      enforceMaxLength = false,
+      maxLength: customMaxLength,
+      minLength: customMinLength,
+      showLengthIndicator = false,
+      lengthIndicatorStyle,
+      lengthIndicatorContainerStyle,
       countries,
       excludeCountries,
       searchPlaceholder,
@@ -69,6 +75,8 @@ export const PhoneInput = forwardRef<PhoneInputRef, PhoneInputProps>(
       selectedCountry,
       isPickerVisible,
       validationResult,
+      minLength,
+      maxLength,
       handleTextChange,
       handleSelectCountry,
       openPicker,
@@ -79,6 +87,9 @@ export const PhoneInput = forwardRef<PhoneInputRef, PhoneInputProps>(
       defaultValue,
       defaultCountryCode,
       autoFormat,
+      enforceMaxLength,
+      maxLength: customMaxLength,
+      minLength: customMinLength,
       onChangeText,
       onChangePhoneNumber,
       onChangeCountry,
@@ -105,6 +116,12 @@ export const PhoneInput = forwardRef<PhoneInputRef, PhoneInputProps>(
         },
         isValid: () => validationResult.isValid,
         getCountry: () => selectedCountry,
+        getCountryCode: () => selectedCountry.code,
+        getIsoCode: () => selectedCountry.code,
+        getCallingCode: () => selectedCountry.callingCode,
+        getMinLength: () => minLength,
+        getMaxLength: () => maxLength,
+        getValidationResult: () => validationResult,
         getPhoneNumber: () => phoneNumber,
         getFullNumber: () => formatToE164(phoneNumber, selectedCountry.callingCode),
         clear: () => {
@@ -117,8 +134,10 @@ export const PhoneInput = forwardRef<PhoneInputRef, PhoneInputProps>(
         readOnly,
         openPicker,
         closePicker,
-        validationResult.isValid,
+        validationResult,
         selectedCountry,
+        minLength,
+        maxLength,
         phoneNumber,
         setPhoneNumber,
         handleTextChange,
@@ -136,7 +155,10 @@ export const PhoneInput = forwardRef<PhoneInputRef, PhoneInputProps>(
     }, [onBlur]);
 
     const isInteractive = !disabled && !readOnly;
-    const hasError = Boolean(errorMessage || (showErrorMessage && !validationResult.isValid && phoneNumber.length > 0));
+    const hasError = Boolean(
+      errorMessage ||
+        (showErrorMessage && !validationResult.isValid && phoneNumber.length > 0)
+    );
 
     return (
       <View style={styles.wrapper}>
@@ -192,12 +214,23 @@ export const PhoneInput = forwardRef<PhoneInputRef, PhoneInputProps>(
           />
         </View>
 
-        {/* Optional Error Message */}
-        {hasError && (
-          <Text style={[styles.errorText, errorTextStyle]}>
-            {errorMessage || validationResult.error || 'Invalid phone number'}
-          </Text>
-        )}
+        {/* Bottom Details Row: Error Message & Length Indicator */}
+        <View style={styles.bottomRow}>
+          <View style={styles.errorContainerBottom}>
+            {hasError && (
+              <Text style={[styles.errorText, errorTextStyle]}>
+                {errorMessage || validationResult.error || 'Invalid phone number'}
+              </Text>
+            )}
+          </View>
+          {showLengthIndicator && (
+            <View style={[styles.lengthIndicatorContainer, lengthIndicatorContainerStyle]}>
+              <Text style={[styles.lengthIndicatorText, lengthIndicatorStyle]}>
+                {validationResult.currentLength}/{maxLength}
+              </Text>
+            </View>
+          )}
+        </View>
 
         {/* Modal Country Picker */}
         <CountryPicker
@@ -238,20 +271,15 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
     borderColor: '#E5E7EB',
     borderRadius: 12,
-    minHeight: 52,
-    paddingHorizontal: 8,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 12,
+    height: 52,
   },
   focusedContainer: {
-    borderColor: '#2563EB',
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
-    elevation: 2,
+    borderColor: '#3B82F6',
   },
   errorContainer: {
     borderColor: '#EF4444',
@@ -265,7 +293,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 8,
-    paddingHorizontal: 8,
+    paddingRight: 8,
   },
   flag: {
     fontSize: 22,
@@ -274,11 +302,11 @@ const styles = StyleSheet.create({
   callingCode: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#1F2937',
+    color: '#111827',
     marginRight: 4,
   },
   dropdownIcon: {
-    fontSize: 9,
+    fontSize: 10,
     color: '#6B7280',
     marginLeft: 2,
   },
@@ -286,23 +314,39 @@ const styles = StyleSheet.create({
     width: 1,
     height: 24,
     backgroundColor: '#E5E7EB',
-    marginHorizontal: 4,
+    marginHorizontal: 8,
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 15,
     color: '#111827',
-    paddingHorizontal: 8,
-    paddingVertical: 10,
+    paddingVertical: 0,
+    height: '100%',
   },
   disabledInput: {
     color: '#9CA3AF',
   },
-  errorText: {
-    color: '#EF4444',
-    fontSize: 12,
+  bottomRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginTop: 4,
-    marginLeft: 4,
+    paddingHorizontal: 4,
+  },
+  errorContainerBottom: {
+    flex: 1,
+  },
+  errorText: {
+    fontSize: 12,
+    color: '#EF4444',
+    fontWeight: '500',
+  },
+  lengthIndicatorContainer: {
+    marginLeft: 8,
+  },
+  lengthIndicatorText: {
+    fontSize: 12,
+    color: '#6B7280',
     fontWeight: '500',
   },
 });

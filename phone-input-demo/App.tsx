@@ -7,6 +7,7 @@ import {
   StatusBar,
   TouchableOpacity,
   Switch,
+  Alert,
   useColorScheme,
 } from 'react-native';
 import {
@@ -18,6 +19,7 @@ import PhoneInputDefault, {
   Country,
   PhoneValidationResult,
   PhoneInputRef,
+  getCountryLengths,
 } from 'react-native-phone-input-kit';
 
 const PhoneInput = NamedPhoneInput || PhoneInputDefault;
@@ -31,24 +33,46 @@ function PhoneInputDemoScreen() {
   const [advancedPhone, setAdvancedPhone] = useState('');
   const [validation, setValidation] = useState<PhoneValidationResult | null>(null);
   const [autoFormat, setAutoFormat] = useState(true);
+  const [enforceMaxLength, setEnforceMaxLength] = useState(true);
+  const [showLengthIndicator, setShowLengthIndicator] = useState(true);
   const [disabled, setDisabled] = useState(false);
 
   // Ref for imperative actions
   const phoneInputRef = useRef<PhoneInputRef>(null);
+
+  const handleInspectRef = () => {
+    if (!phoneInputRef.current) return;
+    const country = phoneInputRef.current.getCountry();
+    const isoCode = phoneInputRef.current.getIsoCode();
+    const callingCode = phoneInputRef.current.getCallingCode();
+    const minLen = phoneInputRef.current.getMinLength();
+    const maxLen = phoneInputRef.current.getMaxLength();
+    const valid = phoneInputRef.current.isValid();
+
+    Alert.alert(
+      'PhoneInput Ref Inspection',
+      `Country: ${country.name} (${country.flag})\n` +
+      `ISO Code: ${isoCode}\n` +
+      `Calling Code: ${callingCode}\n` +
+      `Min Length: ${minLen} digits\n` +
+      `Max Length: ${maxLen} digits\n` +
+      `Valid: ${valid ? 'YES' : 'NO'}`
+    );
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.headerTitle}>React Native Phone Input Kit</Text>
         <Text style={styles.subtitle}>
-          React Native CLI Demo • Production-grade phone number input with real-time validation.
+          Production-grade international phone input with country-wise min/max length validation, ISO & calling codes.
         </Text>
 
-        {/* --- EXAMPLE 1: Basic Uncontrolled Usage --- */}
+        {/* --- EXAMPLE 1: Basic Usage with Country Metadata --- */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>1. Basic Usage</Text>
+          <Text style={styles.cardTitle}>1. Basic Usage & Metadata</Text>
           <Text style={styles.cardDescription}>
-            Default country set to India (IN), automatic formatting, and full international callback.
+            Default country set to India (IN), automatic formatting, and full country metadata callback.
           </Text>
 
           <PhoneInput
@@ -64,26 +88,49 @@ function PhoneInputDemoScreen() {
             <Text style={styles.outputLabel}>Full E.164 Number:</Text>
             <Text style={styles.outputValue}>{basicPhone || 'None'}</Text>
             {basicCountry && (
-              <Text style={styles.outputSub}>
-                Selected Country: {basicCountry.flag} {basicCountry.name} ({basicCountry.callingCode})
-              </Text>
+              <View style={styles.metaGrid}>
+                <Text style={styles.metaItem}>
+                  <Text style={styles.metaBold}>Country: </Text>
+                  {basicCountry.flag} {basicCountry.name}
+                </Text>
+                <Text style={styles.metaItem}>
+                  <Text style={styles.metaBold}>ISO Code: </Text>
+                  {basicCountry.isoCode}
+                </Text>
+                <Text style={styles.metaItem}>
+                  <Text style={styles.metaBold}>Calling Code: </Text>
+                  {basicCountry.callingCode}
+                </Text>
+                <Text style={styles.metaItem}>
+                  <Text style={styles.metaBold}>Length Limits: </Text>
+                  Min {basicCountry.minLength} - Max {basicCountry.maxLength} digits
+                </Text>
+              </View>
             )}
           </View>
         </View>
 
-        {/* --- EXAMPLE 2: Advanced Controlled Usage with Validation --- */}
+        {/* --- EXAMPLE 2: Country-Wise Validation with Min/Max Limits --- */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>2. Advanced Controlled & Validated</Text>
+          <Text style={styles.cardTitle}>2. Country-Wise Validation & Length Control</Text>
           <Text style={styles.cardDescription}>
-            With whitelist (US, IN, GB, CA, AU), error messages, and dynamic controls.
+            Enforces country max length, shows real-time digit counter, and exposes ISO code & calling code.
           </Text>
 
           {/* Controls */}
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Auto Format:</Text>
-            <Switch value={autoFormat} onValueChange={setAutoFormat} />
-            <Text style={[styles.switchLabel, styles.disabledSwitchLabel]}>Disabled:</Text>
-            <Switch value={disabled} onValueChange={setDisabled} />
+          <View style={styles.switchGroup}>
+            <View style={styles.switchRow}>
+              <Text style={styles.switchLabel}>Auto Format:</Text>
+              <Switch value={autoFormat} onValueChange={setAutoFormat} />
+              <Text style={[styles.switchLabel, styles.switchLabelSpacing]}>Enforce Max:</Text>
+              <Switch value={enforceMaxLength} onValueChange={setEnforceMaxLength} />
+            </View>
+            <View style={styles.switchRow}>
+              <Text style={styles.switchLabel}>Show Counter:</Text>
+              <Switch value={showLengthIndicator} onValueChange={setShowLengthIndicator} />
+              <Text style={[styles.switchLabel, styles.switchLabelSpacing]}>Disabled:</Text>
+              <Switch value={disabled} onValueChange={setDisabled} />
+            </View>
           </View>
 
           <PhoneInput
@@ -93,28 +140,63 @@ function PhoneInputDemoScreen() {
             placeholder="Enter phone number"
             disabled={disabled}
             autoFormat={autoFormat}
-            countries={['US', 'IN', 'GB', 'CA', 'AU']}
+            enforceMaxLength={enforceMaxLength}
+            showLengthIndicator={showLengthIndicator}
+            countries={['US', 'IN', 'GB', 'CA', 'AU', 'DE', 'FR', 'AE']}
             showErrorMessage
             onChangeText={setAdvancedPhone}
             onValidityChange={(_isValid, res) => setValidation(res)}
             containerStyle={styles.customInputContainer}
           />
 
-          {/* Validation Status Badge */}
+          {/* Validation Status & Live Metadata */}
           {validation && (
-            <View
-              style={[
-                styles.badge,
-                validation.isValid
-                  ? styles.validBadge
-                  : validation.status === 'INCOMPLETE'
-                  ? styles.incompleteBadge
-                  : styles.invalidBadge,
-              ]}
-            >
-              <Text style={styles.badgeText}>
-                Status: {validation.status} | Possible: {String(validation.isPossible)}
-              </Text>
+            <View style={styles.validationDetailsBox}>
+              <View style={styles.badgeRow}>
+                <View
+                  style={[
+                    styles.badge,
+                    validation.isValid
+                      ? styles.validBadge
+                      : validation.status === 'INCOMPLETE'
+                      ? styles.incompleteBadge
+                      : styles.invalidBadge,
+                  ]}
+                >
+                  <Text style={styles.badgeText}>
+                    Status: {validation.status}
+                  </Text>
+                </View>
+                <Text style={styles.digitsCountText}>
+                  Digits: {validation.currentLength} / {validation.maxLength}
+                </Text>
+              </View>
+
+              <View style={styles.detailRow}>
+                <Text style={styles.detailText}>
+                  <Text style={styles.detailBold}>ISO Code: </Text>
+                  {validation.isoCode}
+                </Text>
+                <Text style={styles.detailText}>
+                  <Text style={styles.detailBold}>Calling Code: </Text>
+                  {validation.callingCode}
+                </Text>
+              </View>
+
+              <View style={styles.detailRow}>
+                <Text style={styles.detailText}>
+                  <Text style={styles.detailBold}>Min Length: </Text>
+                  {validation.minLength} digits ({validation.isMinLengthReached ? '✓ Reached' : '✗ Incomplete'})
+                </Text>
+                <Text style={styles.detailText}>
+                  <Text style={styles.detailBold}>Max Length: </Text>
+                  {validation.maxLength} digits ({validation.isMaxLengthExceeded ? '✗ Exceeded' : '✓ OK'})
+                </Text>
+              </View>
+
+              {validation.error && (
+                <Text style={styles.validationErrorText}>⚠ {validation.error}</Text>
+              )}
             </View>
           )}
 
@@ -128,13 +210,20 @@ function PhoneInputDemoScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
+              style={[styles.actionBtn, styles.inspectBtn]}
+              onPress={handleInspectRef}
+            >
+              <Text style={styles.actionBtnText}>Inspect Ref</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
               style={[styles.actionBtn, styles.clearBtn]}
               onPress={() => {
                 phoneInputRef.current?.clear();
                 setAdvancedPhone('');
               }}
             >
-              <Text style={styles.actionBtnText}>Clear Input</Text>
+              <Text style={styles.actionBtnText}>Clear</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -150,10 +239,12 @@ function PhoneInputDemoScreen() {
             defaultCountryCode="GB"
             placeholder="Your mobile..."
             placeholderTextColor="#6B7280"
+            showLengthIndicator
             containerStyle={styles.darkContainer}
             inputStyle={styles.darkInput}
             callingCodeStyle={styles.darkCallingCode}
             dropdownIconStyle={styles.darkDropdownIcon}
+            lengthIndicatorStyle={styles.darkLengthText}
           />
         </View>
       </ScrollView>
@@ -233,15 +324,28 @@ const styles = StyleSheet.create({
     color: '#2563EB',
     marginTop: 2,
   },
-  outputSub: {
+  metaGrid: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    gap: 4,
+  },
+  metaItem: {
     fontSize: 12,
-    color: '#4B5563',
-    marginTop: 4,
+    color: '#374151',
+  },
+  metaBold: {
+    fontWeight: '700',
+    color: '#111827',
+  },
+  switchGroup: {
+    marginBottom: 12,
+    gap: 8,
   },
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
   },
   switchLabel: {
     fontSize: 13,
@@ -249,19 +353,31 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginRight: 6,
   },
-  disabledSwitchLabel: {
-    marginLeft: 20,
+  switchLabelSpacing: {
+    marginLeft: 16,
   },
   customInputContainer: {
     borderRadius: 14,
     borderColor: '#D1D5DB',
   },
+  validationDetailsBox: {
+    marginTop: 12,
+    padding: 10,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    gap: 6,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   badge: {
-    marginTop: 10,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
     borderRadius: 6,
-    alignSelf: 'flex-start',
   },
   validBadge: {
     backgroundColor: '#DEF7EC',
@@ -274,8 +390,31 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#1F2937',
+  },
+  digitsCountText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#4B5563',
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  detailText: {
+    fontSize: 12,
+    color: '#4B5563',
+  },
+  detailBold: {
+    fontWeight: '600',
+    color: '#111827',
+  },
+  validationErrorText: {
+    fontSize: 12,
+    color: '#DC2626',
+    fontWeight: '500',
+    marginTop: 2,
   },
   actionsRow: {
     flexDirection: 'row',
@@ -283,10 +422,14 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   actionBtn: {
+    flex: 1,
     backgroundColor: '#2563EB',
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingVertical: 9,
     borderRadius: 8,
+    alignItems: 'center',
+  },
+  inspectBtn: {
+    backgroundColor: '#059669',
   },
   clearBtn: {
     backgroundColor: '#6B7280',
@@ -308,6 +451,9 @@ const styles = StyleSheet.create({
     color: '#E5E7EB',
   },
   darkDropdownIcon: {
+    color: '#9CA3AF',
+  },
+  darkLengthText: {
     color: '#9CA3AF',
   },
 });

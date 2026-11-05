@@ -10,12 +10,16 @@ interface UsePhoneInputOptions {
   defaultValue?: string;
   defaultCountryCode?: string;
   autoFormat?: boolean;
+  enforceMaxLength?: boolean;
+  maxLength?: number;
+  minLength?: number;
   onChangeText?: (nationalNumber: string) => void;
   onChangePhoneNumber?: (
     fullNumber: string,
     nationalNumber: string,
     country: Country,
-    isValid: boolean
+    isValid: boolean,
+    validationResult?: PhoneValidationResult
   ) => void;
   onChangeCountry?: (country: Country) => void;
   onValidityChange?: (isValid: boolean, validationResult: PhoneValidationResult) => void;
@@ -26,6 +30,9 @@ export function usePhoneInput({
   defaultValue = '',
   defaultCountryCode = DEFAULT_COUNTRY_CODE,
   autoFormat = true,
+  enforceMaxLength = false,
+  maxLength,
+  minLength,
   onChangeText,
   onChangePhoneNumber,
   onChangeCountry,
@@ -65,6 +72,10 @@ export function usePhoneInput({
 
   // Modal open/close state
   const [isPickerVisible, setIsPickerVisible] = useState<boolean>(false);
+
+  // Effective min & max length
+  const effectiveMinLength = minLength ?? selectedCountry.minLength;
+  const effectiveMaxLength = maxLength ?? selectedCountry.maxLength;
 
   // Validation cache
   const validationResult = useMemo(() => {
@@ -111,9 +122,22 @@ export function usePhoneInput({
   // Handle text input changes
   const handleTextChange = useCallback(
     (text: string) => {
+      let processedText = text;
+
+      // Enforce max length if configured
+      if (enforceMaxLength) {
+        const rawDigits = text.replace(/\D/g, '');
+        if (rawDigits.length > effectiveMaxLength) {
+          const truncatedDigits = rawDigits.slice(0, effectiveMaxLength);
+          processedText = autoFormat
+            ? formatAsYouType(truncatedDigits, selectedCountry.code)
+            : truncatedDigits;
+        }
+      }
+
       const formatted = autoFormat
-        ? formatAsYouType(text, selectedCountry.code)
-        : text;
+        ? formatAsYouType(processedText, selectedCountry.code)
+        : processedText;
 
       if (!isControlled) {
         setInternalValue(formatted);
@@ -128,10 +152,11 @@ export function usePhoneInput({
         fullNumber,
         nationalNumber,
         selectedCountry,
-        currentValidation.isValid
+        currentValidation.isValid,
+        currentValidation
       );
     },
-    [autoFormat, isControlled, selectedCountry]
+    [autoFormat, effectiveMaxLength, enforceMaxLength, isControlled, selectedCountry]
   );
 
   // Handle country selection
@@ -140,19 +165,30 @@ export function usePhoneInput({
       setSelectedCountry(newCountry);
       setIsPickerVisible(false);
 
-      const revalidated = validatePhoneNumber(displayValue, newCountry.code);
-      const fullNumber = formatToE164(displayValue, newCountry.callingCode);
-      const nationalNumber = revalidated.nationalNumber || displayValue.replace(/\D/g, '');
+      // Reformat existing number for new country if autoFormat is enabled
+      const rawDigits = displayValue.replace(/\D/g, '');
+      const reformatted = autoFormat
+        ? formatAsYouType(rawDigits, newCountry.code)
+        : displayValue;
+
+      if (!isControlled) {
+        setInternalValue(reformatted);
+      }
+
+      const revalidated = validatePhoneNumber(reformatted, newCountry.code);
+      const fullNumber = formatToE164(reformatted, newCountry.callingCode);
+      const nationalNumber = revalidated.nationalNumber || reformatted.replace(/\D/g, '');
 
       callbacksRef.current.onChangeCountry?.(newCountry);
       callbacksRef.current.onChangePhoneNumber?.(
         fullNumber,
         nationalNumber,
         newCountry,
-        revalidated.isValid
+        revalidated.isValid,
+        revalidated
       );
     },
-    [displayValue]
+    [autoFormat, displayValue, isControlled]
   );
 
   const openPicker = useCallback(() => setIsPickerVisible(true), []);
@@ -163,6 +199,8 @@ export function usePhoneInput({
     selectedCountry,
     isPickerVisible,
     validationResult,
+    minLength: effectiveMinLength,
+    maxLength: effectiveMaxLength,
     handleTextChange,
     handleSelectCountry,
     openPicker,
@@ -171,4 +209,3 @@ export function usePhoneInput({
     setSelectedCountry,
   };
 }
-

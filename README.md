@@ -12,10 +12,13 @@ A sleek, enterprise-ready, and lightweight React Native phone number input libra
 
 ## 🌟 Features
 
-- 🌍 **240+ Countries & Territories**: Accurate dialing codes, names, ISO-2 codes, and native Unicode flag emojis without heavy image assets.
+- 🌍 **240+ Countries & Territories**: Accurate dialing codes, names, ISO-2 codes (`isoCode`), country codes without plus (`countryCode`), and native Unicode flag emojis.
+- 📏 **Country-Wise Min & Max Length Validation**: Every country has built-in `minLength`, `maxLength`, `mobileLength`, and `possibleLengths` according to ITU standards.
+- 🔒 **Enforce Max Length**: Prevent users from typing or pasting numbers exceeding the selected country's maximum allowed length via `enforceMaxLength`.
+- 🔢 **Live Digit Counter / Length Indicator**: Show real-time progress (e.g. `10/10`) with `showLengthIndicator`.
 - ⚡ **Zero Native Linking Required**: Pure JavaScript/TypeScript. Works seamlessly out-of-the-box with Expo, React Native CLI, and New Architecture (Fabric).
 - 🔍 **Instant Searchable Country Picker**: Modal sheet with lightning-fast search by country name, calling code, or ISO code.
-- 🛡️ **Reliable Phone Validation**: Powered by Google's libphonenumber standard (`libphonenumber-js`). Exposes `VALID`, `INVALID`, `INCOMPLETE`, and `EMPTY` states.
+- 🛡️ **Reliable Phone Validation**: Powered by Google's libphonenumber standard (`libphonenumber-js`). Exposes `VALID`, `INVALID`, `INCOMPLETE`, `TOO_SHORT`, `TOO_LONG`, and `EMPTY` states.
 - ⌨️ **Real-Time Auto-Formatting**: As-you-type national number formatting tailored to each country.
 - 🎨 **100% Customizable**: Tailor containers, inputs, buttons, borders, typography, modal sheets, and error states.
 - 🎛️ **Controlled & Uncontrolled Support**: Seamless integration with Formik, React Hook Form, or standalone components.
@@ -58,9 +61,11 @@ export default function App() {
       <PhoneInput
         defaultCountryCode="IN"
         placeholder="Enter mobile number"
-        onChangePhoneNumber={(fullNumber, nationalNumber, country, isValid) => {
+        onChangePhoneNumber={(fullNumber, nationalNumber, country, isValid, validationResult) => {
           setPhoneNumber(fullNumber);
-          console.log('Selected country:', country.name);
+          console.log('Country ISO:', country.isoCode);
+          console.log('Country Calling Code:', country.callingCode);
+          console.log('Min Length:', country.minLength, 'Max Length:', country.maxLength);
           console.log('Is valid:', isValid);
         }}
       />
@@ -86,9 +91,7 @@ const styles = StyleSheet.create({
 
 ---
 
-## 🎯 Advanced Usage
-
-### Formik / React Hook Form / Controlled State
+## 🎯 Advanced Usage with Country-Wise Length Enforcement
 
 ```tsx
 import React, { useState, useRef } from 'react';
@@ -104,7 +107,7 @@ export default function AdvancedScreen() {
     if (phoneInputRef.current?.isValid()) {
       alert(`Submitting: ${phoneInputRef.current.getFullNumber()}`);
     } else {
-      alert('Please enter a valid phone number');
+      alert(`Invalid! Digits: ${validation?.currentLength}/${validation?.maxLength}`);
     }
   };
 
@@ -116,17 +119,24 @@ export default function AdvancedScreen() {
         defaultCountryCode="US"
         placeholder="(555) 000-0000"
         autoFormat
+        enforceMaxLength
+        showLengthIndicator
         countries={['US', 'CA', 'GB', 'IN', 'AU', 'DE', 'FR']}
         showErrorMessage
         onChangeText={setPhone}
         onValidityChange={(isValid, res) => setValidation(res)}
-        containerStyle={{
-          borderColor: validation?.isValid ? '#10B981' : '#E5E7EB',
-          borderRadius: 12,
-        }}
       />
 
-      <Button title="Validate & Submit" onPress={handleSubmit} />
+      {validation && (
+        <View style={{ marginTop: 10 }}>
+          <Text>ISO Code: {validation.isoCode}</Text>
+          <Text>Calling Code: {validation.callingCode}</Text>
+          <Text>Status: {validation.status}</Text>
+          <Text>Digits: {validation.currentLength} / {validation.maxLength}</Text>
+        </View>
+      )}
+
+      <Button title="Submit" onPress={handleSubmit} />
     </View>
   );
 }
@@ -148,6 +158,11 @@ export default function AdvancedScreen() {
 | `disabled` | `boolean` | `false` | Disables country selector and input field. |
 | `readOnly` | `boolean` | `false` | Sets input to read-only while preserving focusability. |
 | `autoFormat` | `boolean` | `true` | Formats phone numbers as the user types based on country rules. |
+| `enforceMaxLength` | `boolean` | `false` | When true, prevents typing/pasting beyond the selected country's `maxLength`. |
+| `maxLength` | `number` | `undefined` | Custom maximum allowed digits (overrides country default). |
+| `minLength` | `number` | `undefined` | Custom minimum allowed digits (overrides country default). |
+| `showLengthIndicator`| `boolean` | `false` | Displays digit counter (e.g. `10/10`) below the input. |
+| `lengthIndicatorStyle`| `StyleProp<TextStyle>` | `undefined` | Custom style for length indicator text. |
 | `enableSearch` | `boolean` | `true` | Enables search bar inside the country picker modal. |
 | `showFlag` | `boolean` | `true` | Renders country flag emoji on the selector button. |
 | `showCallingCode` | `boolean` | `true` | Renders calling code (e.g. `+1`) on selector button. |
@@ -160,33 +175,14 @@ export default function AdvancedScreen() {
 | `errorMessage` | `string` | `undefined` | Explicit error message string to display below input. |
 | `showErrorMessage` | `boolean` | `false` | Automatically show error message if input is invalid and non-empty. |
 
-### Styling Props
-
-| Prop | Type | Description |
-|---|---|---|
-| `containerStyle` | `StyleProp<ViewStyle>` | Styles for the root input container. |
-| `inputStyle` | `StyleProp<TextStyle>` | Styles for the `TextInput` element. |
-| `countryPickerButtonStyle` | `StyleProp<ViewStyle>` | Styles for the country trigger button on the left. |
-| `flagStyle` | `StyleProp<TextStyle>` | Typography style for flag emojis. |
-| `callingCodeStyle` | `StyleProp<TextStyle>` | Typography style for calling code text. |
-| `dropdownIconStyle` | `StyleProp<TextStyle>` | Typography style for dropdown arrow. |
-| `errorTextStyle` | `StyleProp<TextStyle>` | Style for validation error text below container. |
-| `modalStyle` | `StyleProp<ViewStyle>` | Styles for the modal sheet body. |
-| `overlayStyle` | `StyleProp<ViewStyle>` | Styles for the dark backdrop overlay of modal. |
-| `searchContainerStyle` | `StyleProp<ViewStyle>` | Search input wrapper container style in modal. |
-| `searchInputStyle` | `StyleProp<TextStyle>` | Search `TextInput` style in modal. |
-| `countryItemStyle` | `StyleProp<ViewStyle>` | Style applied to each country row in picker. |
-| `selectedCountryItemStyle` | `StyleProp<ViewStyle>` | Style applied to the selected country row. |
-| `selectedIndicatorColor` | `string` | Color for selected country checkmark icon. |
-
 ### Callbacks
 
 | Callback | Parameters | Description |
 |---|---|---|
-| `onChangePhoneNumber` | `(fullNumber: string, nationalNumber: string, country: Country, isValid: boolean) => void` | Fired on any change; provides E.164 number, national digits, country object, and validity. |
+| `onChangePhoneNumber` | `(fullNumber: string, nationalNumber: string, country: Country, isValid: boolean, validationResult?: PhoneValidationResult) => void` | Fired on any change; provides E.164 number, national digits, country object, validity, and full validation details. |
 | `onChangeText` | `(text: string) => void` | Fired when text input changes directly. |
 | `onChangeCountry` | `(country: Country) => void` | Fired when user selects a different country from picker. |
-| `onValidityChange` | `(isValid: boolean, result: PhoneValidationResult) => void` | Fired when validity state changes (`VALID`, `INVALID`, `INCOMPLETE`, `EMPTY`). |
+| `onValidityChange` | `(isValid: boolean, result: PhoneValidationResult) => void` | Fired when validity state changes (`VALID`, `INVALID`, `INCOMPLETE`, `TOO_SHORT`, `TOO_LONG`, `EMPTY`). |
 | `onFocus` | `() => void` | Fired when phone input receives focus. |
 | `onBlur` | `() => void` | Fired when phone input loses focus. |
 
@@ -202,57 +198,74 @@ import { PhoneInput, PhoneInputRef } from 'react-native-phone-input-kit';
 const phoneRef = useRef<PhoneInputRef>(null);
 
 // Methods:
-phoneRef.current?.focus();              // Focus input
-phoneRef.current?.blur();               // Blur input
-phoneRef.current?.openCountryPicker();  // Open picker modal programmatically
-phoneRef.current?.closeCountryPicker(); // Close picker modal programmatically
-phoneRef.current?.isValid();            // Check if current value is valid (boolean)
-phoneRef.current?.getCountry();          // Returns current Country object
-phoneRef.current?.getPhoneNumber();     // Returns current formatted national number
-phoneRef.current?.getFullNumber();      // Returns full E.164 formatted number (+12025550123)
-phoneRef.current?.clear();              // Clears input text
+phoneRef.current?.focus();                 // Focus input
+phoneRef.current?.blur();                  // Blur input
+phoneRef.current?.openCountryPicker();     // Open picker modal programmatically
+phoneRef.current?.closeCountryPicker();    // Close picker modal programmatically
+phoneRef.current?.isValid();               // Check if current value is valid (boolean)
+phoneRef.current?.getCountry();            // Returns current Country object
+phoneRef.current?.getCountryCode();        // Returns current ISO code (e.g. 'IN')
+phoneRef.current?.getIsoCode();            // Returns current ISO code alias (e.g. 'IN')
+phoneRef.current?.getCallingCode();        // Returns current calling code (e.g. '+91')
+phoneRef.current?.getMinLength();          // Returns minimum length for selected country
+phoneRef.current?.getMaxLength();          // Returns maximum length for selected country
+phoneRef.current?.getValidationResult();   // Returns latest PhoneValidationResult
+phoneRef.current?.getPhoneNumber();        // Returns current formatted national number
+phoneRef.current?.getFullNumber();         // Returns full E.164 formatted number (+919876543210)
+phoneRef.current?.clear();                 // Clears input text
 ```
 
 ---
 
-## 🌍 Country Selection & Filtering
+## 🛡️ Phone Number & Country Validation Utilities
 
-### Whitelist Specific Countries
-Only allow users to pick from a select set of supported markets:
-
-```tsx
-<PhoneInput
-  defaultCountryCode="US"
-  countries={['US', 'CA', 'GB', 'AU', 'IN']}
-/>
-```
-
-### Blacklist Countries
-Exclude specific countries or territories:
+Validation is powered by `libphonenumber-js`. Validation results include granular status tracking, min/max lengths, ISO code, and calling code:
 
 ```tsx
-<PhoneInput
-  defaultCountryCode="GB"
-  excludeCountries={['RU', 'KP']}
-/>
-```
+import {
+  validatePhoneNumber,
+  isPhoneNumberValid,
+  validatePhoneNumberLength,
+  getCountryByCode,
+  getCountryLengths,
+  getCountryMinLength,
+  getCountryMaxLength,
+  getCallingCode,
+  getCountryCallingCodeNumber,
+} from 'react-native-phone-input-kit';
 
----
-
-## 🛡️ Phone Number Validation
-
-Validation is powered by `libphonenumber-js`. Validation results include granular status tracking:
-
-```tsx
-import { validatePhoneNumber, PhoneValidationResult } from 'react-native-phone-input-kit';
-
-const result: PhoneValidationResult = validatePhoneNumber('9876543210', 'IN');
-
+// 1. Comprehensive Validation:
+const result = validatePhoneNumber('9876543210', 'IN');
 console.log(result.isValid);             // true
-console.log(result.status);              // 'VALID' | 'INVALID' | 'INCOMPLETE' | 'EMPTY'
+console.log(result.status);              // 'VALID' | 'INVALID' | 'INCOMPLETE' | 'TOO_SHORT' | 'TOO_LONG' | 'EMPTY'
+console.log(result.isoCode);             // 'IN'
+console.log(result.callingCode);         // '+91'
+console.log(result.countryCallingCode);  // '91'
+console.log(result.minLength);           // 8
+console.log(result.maxLength);           // 13
+console.log(result.currentLength);       // 10
+console.log(result.isMinLengthReached);  // true
+console.log(result.isMaxLengthExceeded); // false
 console.log(result.e164Number);          // '+919876543210'
-console.log(result.nationalNumber);      // '9876543210'
-console.log(result.internationalNumber); // '+91 98765 43210'
+
+// 2. Quick Boolean Check:
+const valid = isPhoneNumberValid('9876543210', 'IN'); // true
+
+// 3. Length Only Check:
+const lengthStatus = validatePhoneNumberLength('987', 'IN'); // 'TOO_SHORT'
+
+// 4. Country Metadata Lookups:
+const india = getCountryByCode('IN');
+console.log(india?.isoCode);       // 'IN'
+console.log(india?.callingCode);   // '+91'
+console.log(india?.countryCode);   // '91'
+console.log(india?.minLength);     // 8
+console.log(india?.maxLength);     // 13
+console.log(india?.mobileLength);  // 10
+
+const lengths = getCountryLengths('US');
+console.log(lengths.minLength); // 10
+console.log(lengths.maxLength); // 10
 ```
 
 ---
@@ -265,6 +278,7 @@ console.log(result.internationalNumber); // '+91 98765 43210'
 <PhoneInput
   defaultCountryCode="US"
   placeholderTextColor="#6B7280"
+  showLengthIndicator
   containerStyle={{
     backgroundColor: '#1F2937',
     borderColor: '#374151',
@@ -278,6 +292,9 @@ console.log(result.internationalNumber); // '+91 98765 43210'
     color: '#E5E7EB',
   }}
   dropdownIconStyle={{
+    color: '#9CA3AF',
+  }}
+  lengthIndicatorStyle={{
     color: '#9CA3AF',
   }}
   modalStyle={{
@@ -307,17 +324,6 @@ console.log(result.internationalNumber); // '+91 98765 43210'
 
 ---
 
-## ❓ Troubleshooting
-
-### Flag emojis appear as letters on older Android emulators
-Some minimal Android emulator system images omit country flag color fonts. This does not affect physical Android devices running Android 7.0+ (Nougat) or higher, where flags render crisply.
-
-### How do I use this inside a BottomSheet or ScrollView?
-The country picker is a standard React Native `<Modal>`. When used inside custom bottom sheets, it opens in a native modal window above the parent container without clipping issues.
-
----
-
 ## 📄 License
 
 MIT © [Jenil](https://github.com/jenilg)
-
