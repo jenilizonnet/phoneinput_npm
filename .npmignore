@@ -1,0 +1,22 @@
+# Tests & Examples
+__tests__/
+example/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Configs & Tooling
+tsconfig.json
+tsconfig.build.json
+jest.config.js
+.eslintrc*
+.prettierrc*
+.babelrc*
+
+# Editor & OS files
+.vscode/
+.idea/
+.DS_Store
+*.log
+
