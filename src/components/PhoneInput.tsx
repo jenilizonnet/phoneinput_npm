@@ -79,6 +79,7 @@ export const PhoneInput = forwardRef<PhoneInputRef, PhoneInputProps>(
       maxLength,
       handleTextChange,
       handleSelectCountry,
+      selectCountry,
       openPicker,
       closePicker,
       setPhoneNumber,
@@ -124,6 +125,9 @@ export const PhoneInput = forwardRef<PhoneInputRef, PhoneInputProps>(
         getValidationResult: () => validationResult,
         getPhoneNumber: () => phoneNumber,
         getFullNumber: () => formatToE164(phoneNumber, selectedCountry.callingCode),
+        selectCountry: (countryCode: string) => {
+          selectCountry(countryCode);
+        },
         clear: () => {
           setPhoneNumber('');
           handleTextChange('');
@@ -134,6 +138,7 @@ export const PhoneInput = forwardRef<PhoneInputRef, PhoneInputProps>(
         readOnly,
         openPicker,
         closePicker,
+        selectCountry,
         validationResult,
         selectedCountry,
         minLength,
@@ -159,6 +164,11 @@ export const PhoneInput = forwardRef<PhoneInputRef, PhoneInputProps>(
       errorMessage ||
         (showErrorMessage && !validationResult.isValid && phoneNumber.length > 0)
     );
+
+    const activePlaceholder =
+      placeholder === DEFAULT_PLACEHOLDER && selectedCountry.example
+        ? selectedCountry.example
+        : placeholder;
 
     return (
       <View style={styles.wrapper}>
@@ -202,7 +212,7 @@ export const PhoneInput = forwardRef<PhoneInputRef, PhoneInputProps>(
             style={[styles.input, disabled && styles.disabledInput, inputStyle]}
             value={phoneNumber}
             onChangeText={handleTextChange}
-            placeholder={placeholder}
+            placeholder={activePlaceholder}
             placeholderTextColor={placeholderTextColor}
             keyboardType="phone-pad"
             textContentType="telephoneNumber"

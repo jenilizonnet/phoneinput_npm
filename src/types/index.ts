@@ -113,6 +113,8 @@ export interface PhoneInputRef {
   getPhoneNumber: () => string;
   /** Get full E.164 phone number */
   getFullNumber: () => string;
+  /** Programmatically select a country by ISO code (e.g. 'CA', 'IN') */
+  selectCountry: (countryCode: string) => void;
   /** Clear input */
   clear: () => void;
 }

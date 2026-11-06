@@ -8,19 +8,17 @@
     "noEmit": true,
     "isolatedModules": true,
     "strict": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
+    "ignoreDeprecations": "6.0",
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "react": ["./node_modules/@types/react"],
-      "react/*": ["./node_modules/@types/react/*"],
-      "react-native": ["./node_modules/react-native"],
-      "react-native/*": ["./node_modules/react-native/*"],
       "react-native-phone-input-kit": ["../src"]
     },
+    "types": ["jest"],
     "typeRoots": ["./node_modules/@types"]
   },
   "include": ["**/*.ts", "**/*.tsx"],

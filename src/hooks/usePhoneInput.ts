@@ -52,15 +52,17 @@ export function usePhoneInput({
 
   const [selectedCountry, setSelectedCountry] = useState<Country>(initialCountry);
 
-  // Sync if defaultCountryCode changes externally
+  // Sync only if defaultCountryCode prop itself changes externally
+  const prevDefaultCountryRef = useRef(defaultCountryCode);
   useEffect(() => {
-    if (defaultCountryCode) {
+    if (defaultCountryCode && defaultCountryCode !== prevDefaultCountryRef.current) {
+      prevDefaultCountryRef.current = defaultCountryCode;
       const country = getCountryByCode(defaultCountryCode);
-      if (country && country.code !== selectedCountry.code) {
+      if (country) {
         setSelectedCountry(country);
       }
     }
-  }, [defaultCountryCode, selectedCountry.code]);
+  }, [defaultCountryCode]);
 
   // Phone number string state (uncontrolled)
   const [internalValue, setInternalValue] = useState<string>(() => {
@@ -179,6 +181,7 @@ export function usePhoneInput({
       const fullNumber = formatToE164(reformatted, newCountry.callingCode);
       const nationalNumber = revalidated.nationalNumber || reformatted.replace(/\D/g, '');
 
+      callbacksRef.current.onChangeText?.(reformatted);
       callbacksRef.current.onChangeCountry?.(newCountry);
       callbacksRef.current.onChangePhoneNumber?.(
         fullNumber,
@@ -189,6 +192,19 @@ export function usePhoneInput({
       );
     },
     [autoFormat, displayValue, isControlled]
+  );
+
+  const selectCountry = useCallback(
+    (countryOrCode: string | Country) => {
+      const country =
+        typeof countryOrCode === 'string'
+          ? getCountryByCode(countryOrCode)
+          : countryOrCode;
+      if (country) {
+        handleSelectCountry(country);
+      }
+    },
+    [handleSelectCountry]
   );
 
   const openPicker = useCallback(() => setIsPickerVisible(true), []);
@@ -203,6 +219,7 @@ export function usePhoneInput({
     maxLength: effectiveMaxLength,
     handleTextChange,
     handleSelectCountry,
+    selectCountry,
     openPicker,
     closePicker,
     setPhoneNumber: setInternalValue,
