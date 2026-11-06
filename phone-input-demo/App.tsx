@@ -195,11 +195,11 @@ function PhoneInputDemoScreen() {
     Alert.alert(
       'Success: Phone Number Verified! ✓',
       `All validations passed successfully:\n\n` +
-        `• Number: ${result.e164Number}\n` +
-        `• Country: ${countryFlag} ${countryName} (${activeCountry.callingCode})\n` +
-        `• ISO Code: ${activeCountry.isoCode}\n` +
-        `• Digits: ${result.currentLength}/${maxLength}\n` +
-        `• Status: VALID ✓`
+      `• Number: ${result.e164Number}\n` +
+      `• Country: ${countryFlag} ${countryName} (${activeCountry.callingCode})\n` +
+      `• ISO Code: ${activeCountry.isoCode}\n` +
+      `• Digits: ${result.currentLength}/${maxLength}\n` +
+      `• Status: VALID ✓`
     );
   };
 
@@ -216,13 +216,13 @@ function PhoneInputDemoScreen() {
     Alert.alert(
       'PhoneInput Ref Inspection',
       `Selected Country: ${c.name} (${c.flag})\n` +
-        `ISO Code: ${isoCode}\n` +
-        `Calling Code: ${callingCode}\n` +
-        `Country Code: ${c.countryCode}\n` +
-        `Min Length: ${minLen} digits\n` +
-        `Max Length: ${maxLen} digits\n` +
-        `Full E.164: ${fullNumber || 'Empty'}\n` +
-        `Is Valid: ${valid ? 'YES ✓' : 'NO ✗'}`
+      `ISO Code: ${isoCode}\n` +
+      `Calling Code: ${callingCode}\n` +
+      `Country Code: ${c.countryCode}\n` +
+      `Min Length: ${minLen} digits\n` +
+      `Max Length: ${maxLen} digits\n` +
+      `Full E.164: ${fullNumber || 'Empty'}\n` +
+      `Is Valid: ${valid ? 'YES ✓' : 'NO ✗'}`
     );
   };
 
@@ -318,14 +318,19 @@ function PhoneInputDemoScreen() {
             showLengthIndicator={true}
             showErrorMessage={true}
             onChangeText={(text) => {
+              console.log("🚀 ~ PhoneInputDemoScreen ~ text:", text)
               setPhone(text);
               if (submission) setSubmission(null);
             }}
             onChangeCountry={(c) => {
+              console.log("🚀 ~ PhoneInputDemoScreen ~ c:", c)
               setCountry(c);
               if (submission) setSubmission(null);
             }}
-            onValidityChange={(_isValid, res) => setValidation(res)}
+            onValidityChange={(_isValid, res) => {
+              console.log("🚀 ~ PhoneInputDemoScreen ~ res:", res)
+              return setValidation(res);
+            }}
             containerStyle={styles.mainInputContainer}
           />
 
@@ -341,8 +346,8 @@ function PhoneInputDemoScreen() {
                   validation?.isValid
                     ? styles.validBadge
                     : validation?.status === 'INCOMPLETE'
-                    ? styles.incompleteBadge
-                    : styles.invalidBadge,
+                      ? styles.incompleteBadge
+                      : styles.invalidBadge,
                 ]}
               >
                 <Text style={styles.badgeText}>

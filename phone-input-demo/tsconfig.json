@@ -9,12 +9,10 @@
     "isolatedModules": true,
     "strict": true,
     "moduleResolution": "bundler",
-    "ignoreDeprecations": "6.0",
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "baseUrl": ".",
     "paths": {
       "react-native-phone-input-kit": ["../src"]
     },
