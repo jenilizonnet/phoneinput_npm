@@ -46,12 +46,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jenilg/react-native-phone-input-kit.git"
+    "url": "git+https://github.com/jenilizonnet/phoneinput_npm.git"
   },
   "bugs": {
-    "url": "https://github.com/jenilg/react-native-phone-input-kit/issues"
+    "url": "https://github.com/jenilizonnet/phoneinput_npm/issues"
   },
-  "homepage": "https://github.com/jenilg/react-native-phone-input-kit#readme",
+  "homepage": "https://github.com/jenilizonnet/phoneinput_npm#readme",
   "peerDependencies": {
     "react": ">=18.0.0",
     "react-native": ">=0.68.0"

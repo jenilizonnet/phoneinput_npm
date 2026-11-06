@@ -1,4 +1,4 @@
-# react-native-phone-input-kit 📱✨
+#react-native-phone-input-kit 📱✨
 
 [![npm version](https://img.shields.io/npm/v/react-native-phone-input-kit.svg?style=flat-square)](https://www.npmjs.com/package/react-native-phone-input-kit)
 [![npm downloads](https://img.shields.io/npm/dm/react-native-phone-input-kit.svg?style=flat-square)](https://www.npmjs.com/package/react-native-phone-input-kit)
@@ -29,15 +29,15 @@ A sleek, enterprise-ready, and lightweight React Native phone number input libra
 ## 📦 Installation
 
 ```bash
-npm install react-native-phone-input-kit libphonenumber-js
+npm installreact-native-phone-input-kit libphonenumber-js
 ```
 
 Or with Yarn / PNPM:
 
 ```bash
-yarn add react-native-phone-input-kit libphonenumber-js
+yarn addreact-native-phone-input-kit libphonenumber-js
 # or
-pnpm add react-native-phone-input-kit libphonenumber-js
+pnpm addreact-native-phone-input-kit libphonenumber-js
 ```
 
 > **Note**: No `pod install` or native code modification is needed!

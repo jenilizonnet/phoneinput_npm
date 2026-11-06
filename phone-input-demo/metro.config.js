@@ -23,6 +23,7 @@ const config = {
   resolver: {
     blockList: [rootNodeModulesRegex],
     extraNodeModules: {
+      '@jenu-dev/react-native-phone-input-kit': path.resolve(root, 'src'),
       'react-native-phone-input-kit': path.resolve(root, 'src'),
       react: path.resolve(__dirname, 'node_modules', 'react'),
       'react-native': path.resolve(__dirname, 'node_modules', 'react-native'),
@@ -30,7 +31,10 @@ const config = {
       'react-native-safe-area-context': path.resolve(__dirname, 'node_modules', 'react-native-safe-area-context'),
     },
     resolveRequest: (context, moduleName, platform) => {
-      if (moduleName === 'react-native-phone-input-kit') {
+      if (
+        moduleName === '@jenu-dev/react-native-phone-input-kit' ||
+        moduleName === 'react-native-phone-input-kit'
+      ) {
         return context.resolveRequest(context, path.resolve(root, 'src/index.ts'), platform);
       }
 
