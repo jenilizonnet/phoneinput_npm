@@ -41,6 +41,7 @@ export function validatePhoneNumber(
       currentLength: 0,
       isMinLengthReached: false,
       isMaxLengthExceeded: false,
+      error: 'Phone number is required',
     };
   }
 
@@ -88,13 +89,15 @@ export function validatePhoneNumber(
 
       if (currentLength === 0) {
         status = 'EMPTY';
-        error = undefined;
+        error = 'Phone number is required';
       } else if (currentLength < minLength) {
         status = 'INCOMPLETE';
-        error = `Phone number is incomplete (min ${minLength} digits for ${countryName})`;
+        error = minLength === maxLength
+          ? `${countryName} phone number requires ${minLength} digits (entered: ${currentLength})`
+          : `${countryName} phone number requires ${minLength}-${maxLength} digits (entered: ${currentLength})`;
       } else if (currentLength > maxLength) {
         status = 'TOO_LONG';
-        error = `Phone number cannot exceed ${maxLength} digits for ${countryName}`;
+        error = `${countryName} phone number cannot exceed ${maxLength} digits (entered: ${currentLength})`;
       }
 
       return {
@@ -116,24 +119,33 @@ export function validatePhoneNumber(
       };
     }
 
-    const isValid = parsed.isValid();
+    const rawIsValid = parsed.isValid();
     const isPossible = parsed.isPossible();
 
     let status: PhoneValidationStatus = 'INVALID';
     let error: string | undefined;
+    let isValid = false;
 
-    if (isValid) {
-      status = 'VALID';
-      error = undefined;
+    if (currentLength === 0) {
+      status = 'EMPTY';
+      error = 'Phone number is required';
     } else if (currentLength < minLength) {
       status = 'INCOMPLETE';
-      error = `Phone number is incomplete (min ${minLength} digits for ${countryName})`;
+      error = minLength === maxLength
+        ? `${countryName} phone number requires ${minLength} digits (entered: ${currentLength})`
+        : `${countryName} phone number requires ${minLength}-${maxLength} digits (entered: ${currentLength})`;
     } else if (currentLength > maxLength) {
       status = 'TOO_LONG';
-      error = `Phone number cannot exceed ${maxLength} digits for ${countryName}`;
+      error = `${countryName} phone number cannot exceed ${maxLength} digits (entered: ${currentLength})`;
+    } else if (rawIsValid) {
+      isValid = true;
+      status = 'VALID';
+      error = undefined;
     } else if (isPossible) {
       status = 'INVALID';
-      error = `Invalid phone number format for ${countryName}`;
+      error = normalizedCountryCode === 'IN'
+        ? 'Invalid Indian mobile number (must start with 6, 7, 8, or 9)'
+        : `Invalid phone number format for ${countryName}`;
     } else {
       status = 'INVALID';
       error = `Invalid phone number for ${countryName}`;

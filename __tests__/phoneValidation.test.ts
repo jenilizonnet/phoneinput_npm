@@ -50,9 +50,23 @@ describe('Phone Validation & Country Utilities', () => {
       expect(result.countryCallingCode).toBe('91');
       expect(result.countryCode).toBe('IN');
       expect(result.isoCode).toBe('IN');
+      expect(result.minLength).toBe(10);
+      expect(result.maxLength).toBe(10);
       expect(result.currentLength).toBe(10);
       expect(result.isMinLengthReached).toBe(true);
       expect(result.isMaxLengthExceeded).toBe(false);
+    });
+
+    it('should reject Indian number with only 8 digits and report required 10 digits', () => {
+      const result = validatePhoneNumber('98765432', 'IN');
+      expect(result.isValid).toBe(false);
+      expect(result.status).toBe('INCOMPLETE');
+      expect(result.currentLength).toBe(8);
+      expect(result.minLength).toBe(10);
+      expect(result.maxLength).toBe(10);
+      expect(result.isMinLengthReached).toBe(false);
+      expect(result.error).toContain('India');
+      expect(result.error).toContain('10 digits');
     });
 
     it('should detect an incomplete phone number while user is typing', () => {
@@ -82,6 +96,7 @@ describe('Phone Validation & Country Utilities', () => {
       expect(result.countryCode).toBe('IN');
       expect(result.isoCode).toBe('IN');
       expect(result.callingCode).toBe('+91');
+      expect(result.error).toBe('Phone number is required');
     });
 
     it('should handle E.164 string and resolve country metadata', () => {
@@ -92,11 +107,24 @@ describe('Phone Validation & Country Utilities', () => {
       expect(result.isoCode).toBe('GB');
       expect(result.callingCode).toBe('+44');
     });
+
+    it('should validate UAE 9-digit number and reject 8 digits', () => {
+      const valid = validatePhoneNumber('501234567', 'AE');
+      expect(valid.isValid).toBe(true);
+      expect(valid.minLength).toBe(9);
+      expect(valid.maxLength).toBe(9);
+
+      const short = validatePhoneNumber('50123456', 'AE');
+      expect(short.isValid).toBe(false);
+      expect(short.status).toBe('INCOMPLETE');
+      expect(short.error).toContain('9 digits');
+    });
   });
 
   describe('isPhoneNumberValid helper', () => {
     it('should return boolean correctly', () => {
       expect(isPhoneNumberValid('9876543210', 'IN')).toBe(true);
+      expect(isPhoneNumberValid('98765432', 'IN')).toBe(false);
       expect(isPhoneNumberValid('123', 'IN')).toBe(false);
       expect(isPhoneNumberValid('2025550123', 'US')).toBe(true);
     });
@@ -108,6 +136,8 @@ describe('Phone Validation & Country Utilities', () => {
       expect(validatePhoneNumberLength('202', 'US')).toBe('TOO_SHORT');
       expect(validatePhoneNumberLength('2025550123', 'US')).toBe('VALID');
       expect(validatePhoneNumberLength('20255501239999', 'US')).toBe('TOO_LONG');
+      expect(validatePhoneNumberLength('98765432', 'IN')).toBe('TOO_SHORT');
+      expect(validatePhoneNumberLength('9876543210', 'IN')).toBe('VALID');
     });
   });
 
@@ -120,8 +150,8 @@ describe('Phone Validation & Country Utilities', () => {
       expect(india?.callingCode).toBe('+91');
       expect(india?.countryCode).toBe('91');
       expect(india?.name).toBe('India');
-      expect(india?.minLength).toBeGreaterThanOrEqual(8);
-      expect(india?.maxLength).toBeLessThanOrEqual(15);
+      expect(india?.minLength).toBe(10);
+      expect(india?.maxLength).toBe(10);
       expect(india?.mobileLength).toBe(10);
 
       const byIso = getCountryByIsoCode('us');
@@ -148,8 +178,8 @@ describe('Phone Validation & Country Utilities', () => {
       expect(getCountryMaxLength('US')).toBe(10);
 
       const inLengths = getCountryLengths('IN');
-      expect(inLengths.minLength).toBeLessThanOrEqual(10);
-      expect(inLengths.maxLength).toBeGreaterThanOrEqual(10);
+      expect(inLengths.minLength).toBe(10);
+      expect(inLengths.maxLength).toBe(10);
       expect(inLengths.mobileLength).toBe(10);
     });
 

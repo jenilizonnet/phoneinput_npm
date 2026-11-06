@@ -30,7 +30,7 @@ export function usePhoneInput({
   defaultValue = '',
   defaultCountryCode = DEFAULT_COUNTRY_CODE,
   autoFormat = true,
-  enforceMaxLength = false,
+  enforceMaxLength = true,
   maxLength,
   minLength,
   onChangeText,

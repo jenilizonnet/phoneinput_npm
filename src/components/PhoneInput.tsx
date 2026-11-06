@@ -27,7 +27,7 @@ export const PhoneInput = forwardRef<PhoneInputRef, PhoneInputProps>(
       showFlag = true,
       showCallingCode = true,
       showDropdownIcon = true,
-      enforceMaxLength = false,
+      enforceMaxLength = true,
       maxLength: customMaxLength,
       minLength: customMinLength,
       showLengthIndicator = false,
